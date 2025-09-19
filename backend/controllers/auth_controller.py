@@ -8,6 +8,10 @@ import os
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from models.user import User, UserCreate, UserLogin, UserResponse
 from database import get_database
 
