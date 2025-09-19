@@ -8,8 +8,8 @@ import os
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 
-from ..models.user import User, UserCreate, UserLogin, UserResponse
-from ..database import get_database
+from models.user import User, UserCreate, UserLogin, UserResponse
+from database import get_database
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 security = HTTPBearer()
