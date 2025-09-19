@@ -3,25 +3,8 @@ from typing import Optional, List
 from datetime import datetime
 from bson import ObjectId
 
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_pydantic_core_schema__(cls, source_type, handler):
-        from pydantic_core import core_schema
-        return core_schema.no_info_after_validator_function(cls.validate, core_schema.str_schema())
-
-    @classmethod
-    def validate(cls, v):
-        if isinstance(v, ObjectId):
-            return v
-        if isinstance(v, str) and ObjectId.is_valid(v):
-            return ObjectId(v)
-        raise ValueError("Invalid ObjectId")
-
-    def __str__(self):
-        return str(super())
-
 class User(BaseModel):
-    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
+    id: Optional[str] = Field(default=None, alias="_id")
     cpf: str
     password: str
     full_name: str
@@ -35,7 +18,6 @@ class User(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
-        arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
 class UserCreate(BaseModel):
