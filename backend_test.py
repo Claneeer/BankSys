@@ -419,10 +419,30 @@ class BankSysAPITester:
         if self.test_insufficient_funds():
             tests_passed += 1
         
-        # 10. Final balance check
+        # 10. Final balance check (should reflect all transactions)
         total_tests += 1
-        if self.test_get_account_balance():
-            tests_passed += 1
+        print("\n--- Final Balance Check ---")
+        try:
+            response = requests.get(
+                f"{self.base_url}/accounts/balance",
+                headers=self.headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                final_balance = data.get("balance")
+                # Expected: 1000 (initial) - 25.5 (debit) + 100 (credit) - 75 (pix_sent) + 50 (pix_received) = 1049.5
+                expected_balance = 1049.5
+                if abs(final_balance - expected_balance) < 0.01:  # Allow for floating point precision
+                    self.log_test("Final Balance Check", True, f"Balance correctly updated to R${final_balance} after all transactions", data)
+                    tests_passed += 1
+                else:
+                    self.log_test("Final Balance Check", False, f"Unexpected final balance: R${final_balance} (expected R${expected_balance})", data)
+            else:
+                self.log_test("Final Balance Check", False, f"HTTP {response.status_code}", response.text)
+        except Exception as e:
+            self.log_test("Final Balance Check", False, f"Request failed: {str(e)}")
         
         # Print summary
         print()
