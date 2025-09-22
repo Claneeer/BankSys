@@ -4,21 +4,52 @@ import { LoginCredentials, RegisterData, AuthResponse, User } from '../models/Us
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
+// Simple storage fallback for web
+const webStorage = {
+  async setItem(key: string, value: string) {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(key, value);
+    }
+  },
+  async getItem(key: string) {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(key);
+    }
+    return null;
+  },
+  async removeItem(key: string) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(key);
+    }
+  }
+};
+
+// Use web storage on web, AsyncStorage on mobile
+const storage = typeof window !== 'undefined' ? webStorage : AsyncStorage;
+
 class AuthController {
   private token: string | null = null;
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
+      console.log('🔐 AuthController login called with:', credentials.cpf);
+      console.log('🌐 API URL:', API_BASE_URL);
+      
       const response = await axios.post(`${API_BASE_URL}/api/auth/login`, credentials);
       const authData: AuthResponse = response.data;
       
+      console.log('✅ Login API response received:', { user: authData.user.full_name });
+      
       // Store token
       this.token = authData.access_token;
-      await AsyncStorage.setItem('auth_token', authData.access_token);
-      await AsyncStorage.setItem('user_data', JSON.stringify(authData.user));
+      await storage.setItem('auth_token', authData.access_token);
+      await storage.setItem('user_data', JSON.stringify(authData.user));
+      
+      console.log('✅ Token and user data stored');
       
       return authData;
     } catch (error: any) {
+      console.error('❌ Login error:', error);
       throw new Error(error.response?.data?.detail || 'Login failed');
     }
   }
@@ -34,8 +65,8 @@ class AuthController {
 
   async logout(): Promise<void> {
     this.token = null;
-    await AsyncStorage.removeItem('auth_token');
-    await AsyncStorage.removeItem('user_data');
+    await storage.removeItem('auth_token');
+    await storage.removeItem('user_data');
   }
 
   async getCurrentUser(): Promise<User | null> {
@@ -58,7 +89,7 @@ class AuthController {
     if (this.token) return this.token;
     
     try {
-      const token = await AsyncStorage.getItem('auth_token');
+      const token = await storage.getItem('auth_token');
       this.token = token;
       return token;
     } catch (error) {
@@ -68,7 +99,7 @@ class AuthController {
 
   async getStoredUser(): Promise<User | null> {
     try {
-      const userDataStr = await AsyncStorage.getItem('user_data');
+      const userDataStr = await storage.getItem('user_data');
       return userDataStr ? JSON.parse(userDataStr) : null;
     } catch (error) {
       return null;
