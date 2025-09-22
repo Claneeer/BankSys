@@ -39,32 +39,37 @@ export default function LoginScreen() {
   };
 
   const handleLogin = async () => {
-    console.log('🔐 handleLogin called', { cpf, password: password.length });
+    console.log('🔐 handleLogin called', { cpf, passwordLength: password.length });
     
-    if (!cpf || cpf.length < 14) {
+    if (!cpf || cpf.length < 11) {
+      console.log('❌ CPF validation failed');
       Alert.alert('Erro', 'Por favor, insira um CPF válido');
       return;
     }
     
     if (!password || password.length < 4) {
+      console.log('❌ Password validation failed');
       Alert.alert('Erro', 'Por favor, insira sua senha');
       return;
     }
 
     try {
       setLoading(true);
+      console.log('🔐 Setting loading to true');
+      
       // Remove CPF formatting for API call
       const cleanCpf = cpf.replace(/\D/g, '');
-      console.log('🔐 Attempting login with:', { cleanCpf, password: '***' });
+      console.log('🔐 Attempting login with CPF:', cleanCpf);
       console.log('🌐 API URL:', process.env.EXPO_PUBLIC_BACKEND_URL);
       
-      await login(cleanCpf, password);
-      console.log('✅ Login successful!');
+      const result = await login(cleanCpf, password);
+      console.log('✅ Login successful!', result);
     } catch (error: any) {
       console.error('❌ Login error:', error);
-      Alert.alert('Erro no Login', error.message);
+      Alert.alert('Erro no Login', error.message || 'Erro desconhecido');
     } finally {
       setLoading(false);
+      console.log('🔐 Setting loading to false');
     }
   };
 
