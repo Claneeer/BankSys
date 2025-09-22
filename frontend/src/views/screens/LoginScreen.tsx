@@ -39,6 +39,8 @@ export default function LoginScreen() {
   };
 
   const handleLogin = async () => {
+    console.log('🔐 handleLogin called', { cpf, password: password.length });
+    
     if (!cpf || cpf.length < 14) {
       Alert.alert('Erro', 'Por favor, insira um CPF válido');
       return;
@@ -53,8 +55,13 @@ export default function LoginScreen() {
       setLoading(true);
       // Remove CPF formatting for API call
       const cleanCpf = cpf.replace(/\D/g, '');
+      console.log('🔐 Attempting login with:', { cleanCpf, password: '***' });
+      console.log('🌐 API URL:', process.env.EXPO_PUBLIC_BACKEND_URL);
+      
       await login(cleanCpf, password);
+      console.log('✅ Login successful!');
     } catch (error: any) {
+      console.error('❌ Login error:', error);
       Alert.alert('Erro no Login', error.message);
     } finally {
       setLoading(false);
