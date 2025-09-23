@@ -27,29 +27,6 @@ const webStorage = {
 // Use web storage on web, AsyncStorage on mobile
 const storage = typeof window !== 'undefined' ? webStorage : AsyncStorage;
 
-// Simple storage fallback for web
-const webStorage = {
-  async setItem(key: string, value: string) {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(key, value);
-    }
-  },
-  async getItem(key: string) {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(key);
-    }
-    return null;
-  },
-  async removeItem(key: string) {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(key);
-    }
-  }
-};
-
-// Use web storage on web, AsyncStorage on mobile
-const storage = typeof window !== 'undefined' ? webStorage : AsyncStorage;
-
 class AuthController {
   private token: string | null = null;
 
