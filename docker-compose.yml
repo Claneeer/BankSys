@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: banksys_mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: banksys_admin
+      MONGO_INITDB_ROOT_PASSWORD: banksys_password_2025
+      MONGO_INITDB_DATABASE: banksys
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./database/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - banksys_network
+
+  # Backend API (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: banksys_backend
+    restart: always
+    environment:
+      - MONGO_URL=mongodb://banksys_admin:banksys_password_2025@mongodb:27017/banksys?authSource=admin
+      - DB_NAME=banksys
+      - SECRET_KEY=banksys-secret-key-production-2025
+      - ENVIRONMENT=production
+    ports:
+      - "8001:8001"
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app
+    networks:
+      - banksys_network
+
+  # Frontend (Expo/React Native Web)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: banksys_frontend
+    restart: always
+    environment:
+      - EXPO_PUBLIC_BACKEND_URL=http://localhost:8001
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - banksys_network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: banksys_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - banksys_network
+
+volumes:
+  mongodb_data:
+
+networks:
+  banksys_network:
+    driver: bridge
