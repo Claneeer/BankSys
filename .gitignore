@@ -84,3 +84,7 @@ model.patch
 *.env
 *.env.*
 banksys-projeto-completo.zip
+-e 
+# Environment files
+*.env
+*.env.*
